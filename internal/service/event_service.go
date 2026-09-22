@@ -4,10 +4,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/hunafazaky/event-booking-app/internal/apperror"
-	"github.com/hunafazaky/event-booking-app/internal/dto"
-	"github.com/hunafazaky/event-booking-app/internal/model"
-	"github.com/hunafazaky/event-booking-app/internal/repository"
+	"github.com/hunafazaky/event-booking-api/internal/apperror"
+	"github.com/hunafazaky/event-booking-api/internal/dto"
+	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/repository"
 )
 
 // CreateEventInput is what the handler builds from the multipart form and

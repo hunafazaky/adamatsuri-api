@@ -1,4 +1,4 @@
-module github.com/hunafazaky/event-booking-app
+module github.com/hunafazaky/event-booking-api
 
 go 1.27
 

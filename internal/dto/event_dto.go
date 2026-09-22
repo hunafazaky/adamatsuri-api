@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/hunafazaky/event-booking-app/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/model"
 )
 
 // EventResponse is the shape of an event in LIST results

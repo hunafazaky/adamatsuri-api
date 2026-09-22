@@ -3,7 +3,7 @@ package config
 import (
 	"log"
 
-	"github.com/hunafazaky/event-booking-app/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

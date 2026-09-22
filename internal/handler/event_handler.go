@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-app/internal/model"
-	"github.com/hunafazaky/event-booking-app/internal/response"
-	"github.com/hunafazaky/event-booking-app/internal/service"
+	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/response"
+	"github.com/hunafazaky/event-booking-api/internal/service"
 )
 
 type EventHandler struct {

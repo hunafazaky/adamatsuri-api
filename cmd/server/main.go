@@ -4,18 +4,18 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-app/internal/config"
-	"github.com/hunafazaky/event-booking-app/internal/handler"
-	"github.com/hunafazaky/event-booking-app/internal/repository"
-	"github.com/hunafazaky/event-booking-app/internal/router"
-	"github.com/hunafazaky/event-booking-app/internal/service"
+	"github.com/hunafazaky/event-booking-api/internal/config"
+	"github.com/hunafazaky/event-booking-api/internal/handler"
+	"github.com/hunafazaky/event-booking-api/internal/repository"
+	"github.com/hunafazaky/event-booking-api/internal/router"
+	"github.com/hunafazaky/event-booking-api/internal/service"
 	"github.com/joho/godotenv"
 
 	// Named (not blank) import now — main.go reads docs.SwaggerInfo
 	// directly below to override Host once deployed. The generated
 	// docs.go's init() side-effect (registering the spec) still runs the
 	// same way on import either way.
-	"github.com/hunafazaky/event-booking-app/docs"
+	"github.com/hunafazaky/event-booking-api/docs"
 )
 
 // @title           Event Booking API

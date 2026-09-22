@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-app/internal/config"
-	"github.com/hunafazaky/event-booking-app/internal/handler"
-	"github.com/hunafazaky/event-booking-app/internal/middleware"
-	"github.com/hunafazaky/event-booking-app/internal/model"
-	"github.com/hunafazaky/event-booking-app/internal/response"
+	"github.com/hunafazaky/event-booking-api/internal/config"
+	"github.com/hunafazaky/event-booking-api/internal/handler"
+	"github.com/hunafazaky/event-booking-api/internal/middleware"
+	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/response"
 
-	"github.com/hunafazaky/event-booking-app/docs"
+	"github.com/hunafazaky/event-booking-api/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

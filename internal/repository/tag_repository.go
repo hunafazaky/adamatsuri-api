@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/hunafazaky/event-booking-app/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/model"
 	"gorm.io/gorm"
 )
 

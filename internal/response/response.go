@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-app/internal/apperror"
+	"github.com/hunafazaky/event-booking-api/internal/apperror"
 )
 
 // Envelope is the standard shape every API response uses, success or failure.

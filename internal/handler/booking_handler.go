@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-app/internal/response"
-	"github.com/hunafazaky/event-booking-app/internal/service"
+	"github.com/hunafazaky/event-booking-api/internal/response"
+	"github.com/hunafazaky/event-booking-api/internal/service"
 )
 
 type BookingInput struct {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hunafazaky/event-booking-app/internal/model"
-	"github.com/hunafazaky/event-booking-app/internal/response"
+	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/event-booking-api/internal/response"
 )
 
 func RequireAuth(jwtSecret string) gin.HandlerFunc {
