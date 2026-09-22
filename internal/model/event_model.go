@@ -17,6 +17,7 @@ type Event struct {
 	User        User      `json:"user" gorm:"foreignKey:user_id"`
 	DateTime    time.Time `json:"datetime" binding:"required" `
 	Category    Category  `json:"category" gorm:"type:varchar(30);not null;default:'meetup';index"`
+	Tags        []Tag     `json:"tags" gorm:"many2many:event_tags;"`
 	Booking     []Booking `json:"booking_list" gorm:"foreignKey:event_id"`
 }
 

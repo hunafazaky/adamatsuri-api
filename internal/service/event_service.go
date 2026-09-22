@@ -19,6 +19,7 @@ type CreateEventInput struct {
 	Location    string
 	DateTime    time.Time
 	Category    model.Category
+	Tags        []string // fandom/genre tag names; optional, may be empty
 	Image       io.Reader
 	ImageName   string
 }
@@ -29,13 +30,18 @@ type UpdateEventInput struct {
 	Location    string
 	DateTime    *time.Time
 	Category    model.Category
-	Image       io.Reader
-	ImageName   string
+	// Tags is nil when the caller didn't send a "tags" field at all —
+	// meaning leave the event's existing tags untouched. A non-nil
+	// (possibly empty) slice means replace the full tag set with this
+	// one; an empty slice clears all tags.
+	Tags      []string
+	Image     io.Reader
+	ImageName string
 }
 
 type EventService interface {
 	Create(userID uint, input CreateEventInput) (*dto.EventResponse, error)
-	List(search string, category model.Category, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error)
+	List(search string, category model.Category, tag string, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error)
 	GetByID(id uint) (*dto.EventDetailResponse, error)
 	GetByUser(userID uint) ([]dto.EventResponse, error)
 	Update(userID, eventID uint, input UpdateEventInput) (*dto.EventResponse, error)
@@ -44,11 +50,12 @@ type EventService interface {
 
 type eventService struct {
 	repo     repository.EventRepository
+	tagRepo  repository.TagRepository
 	uploader ImageUploader
 }
 
-func NewEventService(repo repository.EventRepository, uploader ImageUploader) EventService {
-	return &eventService{repo: repo, uploader: uploader}
+func NewEventService(repo repository.EventRepository, tagRepo repository.TagRepository, uploader ImageUploader) EventService {
+	return &eventService{repo: repo, tagRepo: tagRepo, uploader: uploader}
 }
 
 func (s *eventService) Create(userID uint, input CreateEventInput) (*dto.EventResponse, error) {
@@ -70,11 +77,16 @@ func (s *eventService) Create(userID uint, input CreateEventInput) (*dto.EventRe
 		Location:    input.Location,
 		DateTime:    input.DateTime,
 		Category:    input.Category,
+		UserID:      userID,
 		Image:       imageURL,
 		ImageID:     imageID,
-		UserID:      userID,
 	}
 
+	// Tags are deliberately NOT set on the struct before Create: GORM
+	// would try to upsert every associated Tag row too, which risks
+	// duplicate-key errors for tags that already exist. Instead the
+	// event is created tag-less, then SetTags below only touches the
+	// join table against already-persisted Tag rows.
 	if err := s.repo.Create(&event); err != nil {
 		// The upload already succeeded but the DB write didn't — clean up
 		// the now-orphaned file rather than leaving it in ImageKit forever.
@@ -86,14 +98,25 @@ func (s *eventService) Create(userID uint, input CreateEventInput) (*dto.EventRe
 		return nil, apperror.Internal("failed to create event", err)
 	}
 
+	if len(input.Tags) > 0 {
+		tags, err := s.tagRepo.FindOrCreateByNames(input.Tags)
+		if err != nil {
+			return nil, apperror.Internal("failed to process tags", err)
+		}
+		if err := s.repo.SetTags(&event, tags); err != nil {
+			return nil, apperror.Internal("failed to associate tags", err)
+		}
+	}
+
 	// repo.Create reloads the row with Preload("User") after insert, so
 	// event.User is populated here — toEventResponse gets the real name
-	// and email, not just the ID.
+	// and email, not just the ID. event.Tags is set by SetTags above
+	// (or stays nil/empty if no tags were given).
 	response := toEventResponse(event)
 	return &response, nil
 }
 
-func (s *eventService) List(search string, category model.Category, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error) {
+func (s *eventService) List(search string, category model.Category, tag string, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -105,7 +128,7 @@ func (s *eventService) List(search string, category model.Category, page, limit 
 		return nil, dto.EventListMeta{}, apperror.BadRequest("invalid category")
 	}
 
-	events, totalRows, totalPage, err := s.repo.FindAll(search, category, page, limit)
+	events, totalRows, totalPage, err := s.repo.FindAll(search, category, tag, page, limit)
 	if err != nil {
 		return nil, dto.EventListMeta{}, apperror.Internal("failed to load data", err)
 	}
@@ -224,9 +247,23 @@ func (s *eventService) Update(userID, eventID uint, input UpdateEventInput) (*dt
 		return nil, apperror.Internal("failed to update event", err)
 	}
 
-	// event.User was already preloaded by the FindByID call above and
-	// is untouched by anything since — toEventResponse gets the real
-	// name/email here instead of an ID-only stub.
+	// nil means the request didn't send a "tags" field at all — leave
+	// the existing tags alone. A non-nil (possibly empty) slice means
+	// replace the full set, which SetTags does even for an empty slice
+	// (clearing every tag).
+	if input.Tags != nil {
+		tags, err := s.tagRepo.FindOrCreateByNames(input.Tags)
+		if err != nil {
+			return nil, apperror.Internal("failed to process tags", err)
+		}
+		if err := s.repo.SetTags(event, tags); err != nil {
+			return nil, apperror.Internal("failed to associate tags", err)
+		}
+	}
+
+	// event.User and event.Tags were already preloaded by the FindByID
+	// call above (Tags is refreshed by SetTags when tags changed) —
+	// toEventResponse gets the real data here, not an ID-only stub.
 	eventResponse := toEventResponse(*event)
 
 	return &eventResponse, nil

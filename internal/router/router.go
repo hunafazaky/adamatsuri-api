@@ -138,11 +138,17 @@ func Setup(
 	userHandler *handler.UserHandler,
 	eventHandler *handler.EventHandler,
 	bookingHandler *handler.BookingHandler,
+	tagHandler *handler.TagHandler,
 ) {
 	{
 		api := server.Group("/api/events")
 		api.GET("", eventHandler.GetEvents)
 		api.GET("/:id", eventHandler.GetEventByID)
+	}
+
+	{
+		api := server.Group("/api/tags")
+		api.GET("", tagHandler.GetTags)
 	}
 
 	{

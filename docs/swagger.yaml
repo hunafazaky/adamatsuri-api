@@ -44,6 +44,10 @@ definitions:
         type: string
       name:
         type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.TagResponse'
+        type: array
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
@@ -76,6 +80,10 @@ definitions:
         type: string
       name:
         type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.TagResponse'
+        type: array
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
@@ -85,6 +93,13 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.TagResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   dto.UserResponse:
     properties:
@@ -439,6 +454,11 @@ paths:
         in: query
         name: category
         type: string
+      - description: Filter by fandom/genre tag name
+        example: shounen
+        in: query
+        name: tag
+        type: string
       - description: Page number (default 1)
         example: 1
         in: query
@@ -512,6 +532,11 @@ paths:
         in: formData
         name: category
         required: true
+        type: string
+      - description: Comma-separated fandom/genre tags
+        example: Jujutsu Kaisen, shounen
+        in: formData
+        name: tags
         type: string
       - description: Event image
         in: formData
@@ -651,6 +676,11 @@ paths:
         in: formData
         name: category
         type: string
+      - description: Comma-separated fandom/genre tags — replaces the full tag set
+        example: Jujutsu Kaisen, shounen
+        in: formData
+        name: tags
+        type: string
       - description: Event image
         in: formData
         name: image
@@ -718,6 +748,31 @@ paths:
       summary: Get user's event list
       tags:
       - Events
+  /tags:
+    get:
+      description: Returns every fandom/genre tag currently in use, for building a
+        filter UI or a tag picker.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TagResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      summary: Get all tags
+      tags:
+      - Tags
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and your JWT.

@@ -17,6 +17,7 @@ type EventResponse struct {
 	Image       string         `json:"image"`
 	DateTime    time.Time      `json:"datetime"`
 	Category    model.Category `json:"category"`
+	Tags        []TagResponse  `json:"tags"`
 	User        UserResponse   `json:"user"`
 	CreatedAt   time.Time      `json:"created_at"`
 }

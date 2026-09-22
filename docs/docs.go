@@ -385,6 +385,13 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "example": "shounen",
+                        "description": "Filter by fandom/genre tag name",
+                        "name": "tag",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "example": 1,
                         "description": "Page number (default 1)",
@@ -496,6 +503,13 @@ const docTemplate = `{
                         "name": "category",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "Jujutsu Kaisen, shounen",
+                        "description": "Comma-separated fandom/genre tags",
+                        "name": "tags",
+                        "in": "formData"
                     },
                     {
                         "type": "file",
@@ -707,6 +721,13 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "string",
+                        "example": "Jujutsu Kaisen, shounen",
+                        "description": "Comma-separated fandom/genre tags — replaces the full tag set",
+                        "name": "tags",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
                         "description": "Event image",
                         "name": "image",
@@ -815,6 +836,47 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/tags": {
+            "get": {
+                "description": "Returns every fandom/genre tag currently in use, for building a filter UI or a tag picker.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "Get all tags",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.TagResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Envelope"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -885,6 +947,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TagResponse"
+                    }
+                },
                 "user": {
                     "$ref": "#/definitions/dto.UserResponse"
                 }
@@ -934,6 +1002,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TagResponse"
+                    }
+                },
                 "user": {
                     "$ref": "#/definitions/dto.UserResponse"
                 }
@@ -947,6 +1021,17 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/dto.UserResponse"
+                }
+            }
+        },
+        "dto.TagResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

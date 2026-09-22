@@ -69,22 +69,25 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	eventRepo := repository.NewEventRepository(db)
 	bookingRepo := repository.NewBookingRepository(db)
+	tagRepo := repository.NewTagRepository(db)
 
 	// Services — note the extra dependencies beyond just their repo
 	uploader := service.NewImageKitUploader(cfg.ImageKitPrivateKey)
 	userService := service.NewUserService(userRepo, cfg.JWTSecret)
-	eventService := service.NewEventService(eventRepo, uploader)
+	eventService := service.NewEventService(eventRepo, tagRepo, uploader)
 	bookingService := service.NewBookingService(bookingRepo, eventRepo)
+	tagService := service.NewTagService(tagRepo)
 
 	// Handlers
 	userHandler := handler.NewUserHandler(userService)
 	eventHandler := handler.NewEventHandler(eventService)
 	bookingHandler := handler.NewBookingHandler(bookingService)
+	tagHandler := handler.NewTagHandler(tagService)
 
 	server := gin.Default()
 	server.SetTrustedProxies([]string{"localhost"})
 
-	router.Setup(server, cfg, userHandler, eventHandler, bookingHandler)
+	router.Setup(server, cfg, userHandler, eventHandler, bookingHandler, tagHandler)
 
 	server.Run(":" + cfg.Port)
 }

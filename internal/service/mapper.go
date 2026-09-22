@@ -18,6 +18,21 @@ func toUserResponse(user model.User) dto.UserResponse {
 	}
 }
 
+func toTagResponse(tag model.Tag) dto.TagResponse {
+	return dto.TagResponse{
+		ID:   tag.ID,
+		Name: tag.Name,
+	}
+}
+
+func toTagResponses(tags []model.Tag) []dto.TagResponse {
+	responses := make([]dto.TagResponse, 0, len(tags))
+	for _, tag := range tags {
+		responses = append(responses, toTagResponse(tag))
+	}
+	return responses
+}
+
 func toEventResponse(event model.Event) dto.EventResponse {
 	return dto.EventResponse{
 		ID:          event.ID,
@@ -27,6 +42,7 @@ func toEventResponse(event model.Event) dto.EventResponse {
 		Image:       event.Image,
 		DateTime:    event.DateTime,
 		Category:    event.Category,
+		Tags:        toTagResponses(event.Tags),
 		User:        toUserResponse(event.User),
 		CreatedAt:   event.CreatedAt,
 	}

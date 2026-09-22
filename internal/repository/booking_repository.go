@@ -42,6 +42,7 @@ func (r *bookingRepository) FindByUserID(userID uint) ([]model.Booking, error) {
 	err := r.db.
 		Preload("Event").
 		Preload("Event.User", userSummary).
+		Preload("Event.Tags").
 		Where("user_id = ?", userID).
 		Find(&bookings).Error
 	return bookings, err
