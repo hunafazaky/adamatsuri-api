@@ -17,6 +17,10 @@ type SignUpInput struct {
 	Name     string `json:"name" binding:"required" example:"Jane Doe"`
 	Email    string `json:"email" binding:"required,email" example:"jane@example.com"`
 	Password string `json:"password" binding:"required,min=6" example:"secret123"`
+	// Role is optional and defaults to "attendee" when omitted. Only
+	// "attendee" and "organizer" may be requested here — "admin" is
+	// deliberately not reachable through sign-up.
+	Role model.Role `json:"role" binding:"omitempty,oneof=attendee organizer" example:"attendee"`
 }
 
 type SignInInput struct {
@@ -45,10 +49,16 @@ func (s *userService) SignUp(input SignUpInput) (*dto.UserResponse, error) {
 		return nil, apperror.Internal("Failed to Hash Password", err)
 	}
 
+	role := input.Role
+	if role == "" {
+		role = model.RoleAttendee
+	}
+
 	user := model.User{
 		Name:     input.Name,
 		Email:    input.Email,
 		Password: string(hashedPassword),
+		Role:     role,
 	}
 
 	if err := s.repo.Create(&user); err != nil {
@@ -58,11 +68,7 @@ func (s *userService) SignUp(input SignUpInput) (*dto.UserResponse, error) {
 		return nil, apperror.Internal("Failed to create User", err)
 	}
 
-	response := dto.UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
-	}
+	response := toUserResponse(user)
 	return &response, nil
 }
 
@@ -76,9 +82,15 @@ func (s *userService) SignIn(input SignInInput) (*dto.SignInResponse, error) {
 		return nil, apperror.Unauthorized("Invalid email or password")
 	}
 
+	// Role travels inside the JWT so RequireAuth/RequireRole can check
+	// it without a DB round trip on every request. Trade-off: if a
+	// user's role changes (once there's an admin-promotion path), the
+	// change won't take effect until they sign in again and get a new
+	// token — acceptable for now, worth revisiting later.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"sub":  user.ID,
+		"role": string(user.Role),
+		"exp":  time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(s.jwtSecret))
@@ -86,11 +98,7 @@ func (s *userService) SignIn(input SignInInput) (*dto.SignInResponse, error) {
 		return nil, apperror.Internal("Failed to sign token", err)
 	}
 
-	userResponse := dto.UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
-	}
+	userResponse := toUserResponse(*user)
 
 	response := dto.SignInResponse{
 		Token: tokenString,
@@ -106,11 +114,7 @@ func (s *userService) GetAuthUser(userID uint) (*dto.UserResponse, error) {
 		return nil, mapLookupError(err, "user not found", "failed to load user")
 	}
 
-	response := dto.UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
-	}
+	response := toUserResponse(*user)
 
 	return &response, nil
 }

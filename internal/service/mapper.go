@@ -14,6 +14,7 @@ func toUserResponse(user model.User) dto.UserResponse {
 		ID:    user.ID,
 		Name:  user.Name,
 		Email: user.Email,
+		Role:  user.Role,
 	}
 }
 
@@ -25,6 +26,7 @@ func toEventResponse(event model.Event) dto.EventResponse {
 		Location:    event.Location,
 		Image:       event.Image,
 		DateTime:    event.DateTime,
+		Category:    event.Category,
 		User:        toUserResponse(event.User),
 		CreatedAt:   event.CreatedAt,
 	}

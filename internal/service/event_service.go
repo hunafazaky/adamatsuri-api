@@ -18,6 +18,7 @@ type CreateEventInput struct {
 	Description string
 	Location    string
 	DateTime    time.Time
+	Category    model.Category
 	Image       io.Reader
 	ImageName   string
 }
@@ -27,13 +28,14 @@ type UpdateEventInput struct {
 	Description string
 	Location    string
 	DateTime    *time.Time
+	Category    model.Category
 	Image       io.Reader
 	ImageName   string
 }
 
 type EventService interface {
 	Create(userID uint, input CreateEventInput) (*dto.EventResponse, error)
-	List(search string, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error)
+	List(search string, category model.Category, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error)
 	GetByID(id uint) (*dto.EventDetailResponse, error)
 	GetByUser(userID uint) ([]dto.EventResponse, error)
 	Update(userID, eventID uint, input UpdateEventInput) (*dto.EventResponse, error)
@@ -50,6 +52,10 @@ func NewEventService(repo repository.EventRepository, uploader ImageUploader) Ev
 }
 
 func (s *eventService) Create(userID uint, input CreateEventInput) (*dto.EventResponse, error) {
+	if !model.IsValidCategory(input.Category) {
+		return nil, apperror.BadRequest("invalid category")
+	}
+
 	// Upload FIRST, before touching the database. If the upload fails,
 	// there's nothing to roll back — we simply never created a DB row
 	// with a broken/missing image reference.
@@ -63,6 +69,7 @@ func (s *eventService) Create(userID uint, input CreateEventInput) (*dto.EventRe
 		Description: input.Description,
 		Location:    input.Location,
 		DateTime:    input.DateTime,
+		Category:    input.Category,
 		Image:       imageURL,
 		ImageID:     imageID,
 		UserID:      userID,
@@ -79,24 +86,14 @@ func (s *eventService) Create(userID uint, input CreateEventInput) (*dto.EventRe
 		return nil, apperror.Internal("failed to create event", err)
 	}
 
-	response := dto.EventResponse{
-		ID:          event.ID,
-		Name:        event.Name,
-		Description: event.Description,
-		Location:    event.Location,
-		Image:       event.Image,
-		DateTime:    event.DateTime,
-		CreatedAt:   event.CreatedAt,
-		// Built from data already available (the authenticated userID) —
-		// no extra repo.FindByID round-trip just to fill in a response
-		// field. Name/Email are intentionally blank here: the service
-		// never received them, only the ID.
-		User: toUserResponse(event.User),
-	}
+	// repo.Create reloads the row with Preload("User") after insert, so
+	// event.User is populated here — toEventResponse gets the real name
+	// and email, not just the ID.
+	response := toEventResponse(event)
 	return &response, nil
 }
 
-func (s *eventService) List(search string, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error) {
+func (s *eventService) List(search string, category model.Category, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -104,23 +101,18 @@ func (s *eventService) List(search string, page, limit int) ([]dto.EventResponse
 		limit = 6
 	}
 
-	events, totalRows, totalPage, err := s.repo.FindAll(search, page, limit)
+	if category != "" && !model.IsValidCategory(category) {
+		return nil, dto.EventListMeta{}, apperror.BadRequest("invalid category")
+	}
+
+	events, totalRows, totalPage, err := s.repo.FindAll(search, category, page, limit)
 	if err != nil {
 		return nil, dto.EventListMeta{}, apperror.Internal("failed to load data", err)
 	}
 
 	eventResponse := make([]dto.EventResponse, 0, len(events))
 	for _, item := range events {
-		eventResponse = append(eventResponse, dto.EventResponse{
-			ID:          item.ID,
-			Name:        item.Name,
-			Description: item.Description,
-			Location:    item.Location,
-			Image:       item.Image,
-			DateTime:    item.DateTime,
-			User:        toUserResponse(item.User),
-			CreatedAt:   item.CreatedAt,
-		})
+		eventResponse = append(eventResponse, toEventResponse(item))
 	}
 
 	eventListMeta := dto.EventListMeta{
@@ -139,16 +131,7 @@ func (s *eventService) GetByID(id uint) (*dto.EventDetailResponse, error) {
 		return nil, mapLookupError(err, "event not found", "failed to load event")
 	}
 
-	eventResponse := dto.EventResponse{
-		ID:          event.ID,
-		Name:        event.Name,
-		Description: event.Description,
-		Location:    event.Location,
-		Image:       event.Image,
-		DateTime:    event.DateTime,
-		User:        toUserResponse(event.User),
-		CreatedAt:   event.CreatedAt,
-	}
+	eventResponse := toEventResponse(*event)
 
 	bookingSummaryResponse := make([]dto.BookingSummaryResponse, 0, len(event.Booking))
 	for _, item := range event.Booking {
@@ -175,16 +158,7 @@ func (s *eventService) GetByUser(userID uint) ([]dto.EventResponse, error) {
 
 	listEventResponse := make([]dto.EventResponse, 0, len(events))
 	for _, item := range events {
-		listEventResponse = append(listEventResponse, dto.EventResponse{
-			ID:          item.ID,
-			Name:        item.Name,
-			Description: item.Description,
-			Location:    item.Location,
-			Image:       item.Image,
-			DateTime:    item.DateTime,
-			User:        toUserResponse(item.User),
-			CreatedAt:   item.CreatedAt,
-		})
+		listEventResponse = append(listEventResponse, toEventResponse(item))
 	}
 
 	return listEventResponse, nil
@@ -239,21 +213,21 @@ func (s *eventService) Update(userID, eventID uint, input UpdateEventInput) (*dt
 	if input.DateTime != nil {
 		event.DateTime = *input.DateTime
 	}
+	if input.Category != "" {
+		if !model.IsValidCategory(input.Category) {
+			return nil, apperror.BadRequest("invalid category")
+		}
+		event.Category = input.Category
+	}
 
 	if err := s.repo.Update(event); err != nil {
 		return nil, apperror.Internal("failed to update event", err)
 	}
 
-	eventResponse := dto.EventResponse{
-		ID:          event.ID,
-		Name:        event.Name,
-		Description: event.Description,
-		Location:    event.Location,
-		Image:       event.Image,
-		DateTime:    event.DateTime,
-		CreatedAt:   event.CreatedAt,
-		User:        dto.UserResponse{ID: userID},
-	}
+	// event.User was already preloaded by the FindByID call above and
+	// is untouched by anything since — toEventResponse gets the real
+	// name/email here instead of an ID-only stub.
+	eventResponse := toEventResponse(*event)
 
 	return &eventResponse, nil
 }

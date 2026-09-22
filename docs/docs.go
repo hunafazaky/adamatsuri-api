@@ -371,6 +371,20 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "convention",
+                            "doujin_market",
+                            "screening",
+                            "cosplay_contest",
+                            "game_tournament",
+                            "meetup"
+                        ],
+                        "type": "string",
+                        "description": "Filter by category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "example": 1,
                         "description": "Page number (default 1)",
@@ -465,6 +479,21 @@ const docTemplate = `{
                         "example": "2026-12-01T09:00:00Z",
                         "description": "RFC3339 datetime",
                         "name": "datetime",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "convention",
+                            "doujin_market",
+                            "screening",
+                            "cosplay_contest",
+                            "game_tournament",
+                            "meetup"
+                        ],
+                        "type": "string",
+                        "description": "Event category",
+                        "name": "category",
                         "in": "formData",
                         "required": true
                     },
@@ -664,6 +693,20 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "enum": [
+                            "convention",
+                            "doujin_market",
+                            "screening",
+                            "cosplay_contest",
+                            "game_tournament",
+                            "meetup"
+                        ],
+                        "type": "string",
+                        "description": "Event category",
+                        "name": "category",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
                         "description": "Event image",
                         "name": "image",
@@ -818,6 +861,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.BookingSummaryResponse"
                     }
                 },
+                "category": {
+                    "$ref": "#/definitions/model.Category"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -864,6 +910,9 @@ const docTemplate = `{
         "dto.EventResponse": {
             "type": "object",
             "properties": {
+                "category": {
+                    "$ref": "#/definitions/model.Category"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -912,8 +961,59 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/model.Role"
                 }
             }
+        },
+        "model.Category": {
+            "type": "string",
+            "enum": [
+                "convention",
+                "doujin_market",
+                "screening",
+                "cosplay_contest",
+                "game_tournament",
+                "meetup"
+            ],
+            "x-enum-comments": {
+                "CategoryConvention": "large multi-vendor/multi-panel event",
+                "CategoryCosplayContest": "cosplay competition or gathering",
+                "CategoryDoujinMarket": "artist alley / fan-work sales",
+                "CategoryGameTournament": "anime/visual-novel game tournament",
+                "CategoryMeetup": "casual fan meetup",
+                "CategoryScreening": "anime/movie screening"
+            },
+            "x-enum-descriptions": [
+                "large multi-vendor/multi-panel event",
+                "artist alley / fan-work sales",
+                "anime/movie screening",
+                "cosplay competition or gathering",
+                "anime/visual-novel game tournament",
+                "casual fan meetup"
+            ],
+            "x-enum-varnames": [
+                "CategoryConvention",
+                "CategoryDoujinMarket",
+                "CategoryScreening",
+                "CategoryCosplayContest",
+                "CategoryGameTournament",
+                "CategoryMeetup"
+            ]
+        },
+        "model.Role": {
+            "type": "string",
+            "enum": [
+                "attendee",
+                "organizer",
+                "admin"
+            ],
+            "x-enum-varnames": [
+                "RoleAttendee",
+                "RoleOrganizer",
+                "RoleAdmin"
+            ]
         },
         "response.Envelope": {
             "type": "object",
@@ -981,6 +1081,19 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 6,
                     "example": "secret123"
+                },
+                "role": {
+                    "description": "Role is optional and defaults to \"attendee\" when omitted. Only\n\"attendee\" and \"organizer\" may be requested here — \"admin\" is\ndeliberately not reachable through sign-up.",
+                    "enum": [
+                        "attendee",
+                        "organizer"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Role"
+                        }
+                    ],
+                    "example": "attendee"
                 }
             }
         }

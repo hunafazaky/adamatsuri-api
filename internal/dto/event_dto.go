@@ -1,19 +1,24 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/hunafazaky/event-booking-app/internal/model"
+)
 
 // EventResponse is the shape of an event in LIST results
 // (GET /events, GET /events/mine). No bookings — those queries never
 // preload them, so this DTO doesn't promise data that isn't there.
 type EventResponse struct {
-	ID          uint         `json:"id"`
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Location    string       `json:"location"`
-	Image       string       `json:"image"`
-	DateTime    time.Time    `json:"datetime"`
-	User        UserResponse `json:"user"`
-	CreatedAt   time.Time    `json:"created_at"`
+	ID          uint           `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Location    string         `json:"location"`
+	Image       string         `json:"image"`
+	DateTime    time.Time      `json:"datetime"`
+	Category    model.Category `json:"category"`
+	User        UserResponse   `json:"user"`
+	CreatedAt   time.Time      `json:"created_at"`
 }
 
 // EventDetailResponse extends EventResponse with the list of bookings.

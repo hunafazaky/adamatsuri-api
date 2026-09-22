@@ -9,7 +9,7 @@ type EventRepository interface {
 	Create(event *model.Event) error
 	Update(event *model.Event) error
 	Delete(event *model.Event) error
-	FindAll(search string, page, limit int) (events []model.Event, totalRows, totalPages int64, err error)
+	FindAll(search string, category model.Category, page, limit int) (events []model.Event, totalRows, totalPages int64, err error)
 	FindByID(id uint) (*model.Event, error)
 	FindByUserID(userID uint) ([]model.Event, error)
 }
@@ -37,12 +37,15 @@ func (r *eventRepository) Delete(event *model.Event) error {
 	return r.db.Delete(event).Error
 }
 
-func (r *eventRepository) FindAll(search string, page, limit int) (events []model.Event, totalRows, totalPages int64, err error) {
+func (r *eventRepository) FindAll(search string, category model.Category, page, limit int) (events []model.Event, totalRows, totalPages int64, err error) {
 
 	// Initialize Query
 	query := r.db.Model(&model.Event{})
 	if search != "" {
 		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+	if category != "" {
+		query = query.Where("category = ?", category)
 	}
 
 	// Total Rows

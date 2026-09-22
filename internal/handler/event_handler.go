@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hunafazaky/event-booking-app/internal/model"
 	"github.com/hunafazaky/event-booking-app/internal/response"
 	"github.com/hunafazaky/event-booking-app/internal/service"
 )
@@ -30,6 +31,7 @@ func NewEventHandler(service service.EventService) *EventHandler {
 // @Param description formData string true "Event description" example(A conference about the latest in tech)
 // @Param location formData string true "Event location" example(Jakarta, Indonesia)
 // @Param datetime formData string true "RFC3339 datetime" example(2026-12-01T09:00:00Z)
+// @Param category formData string true "Event category" Enums(convention, doujin_market, screening, cosplay_contest, game_tournament, meetup)
 // @Param image formData file true "Event image"
 // @Success 201 {object} response.Envelope{data=dto.EventResponse}
 // @Failure 400 {object} response.Envelope
@@ -61,6 +63,7 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 		Description: c.PostForm("description"),
 		Location:    c.PostForm("location"),
 		DateTime:    dateTime,
+		Category:    model.Category(c.PostForm("category")),
 		Image:       file,
 		ImageName:   header.Filename,
 	}
@@ -80,6 +83,7 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 // @Tags Events
 // @Produce json
 // @Param search query string false "Search by name or description" example(conference)
+// @Param category query string false "Filter by category" Enums(convention, doujin_market, screening, cosplay_contest, game_tournament, meetup)
 // @Param page query int false "Page number (default 1)" example(1)
 // @Param limit query int false "Results per page (default 6)" example(6)
 // @Success 200 {object} response.Envelope{data=[]dto.EventResponse,meta=dto.EventListMeta}
@@ -89,7 +93,7 @@ func (h *EventHandler) GetEvents(c *gin.Context) {
 	page, _ := strconv.Atoi(c.Query("page"))
 	limit, _ := strconv.Atoi(c.Query("limit"))
 
-	events, meta, err := h.service.List(c.Query("search"), page, limit)
+	events, meta, err := h.service.List(c.Query("search"), model.Category(c.Query("category")), page, limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -160,6 +164,7 @@ func (h *EventHandler) GetEventsMine(c *gin.Context) {
 // @Param description formData string false "Event description" example(A conference about the latest in tech)
 // @Param location formData string false "Event location" example(Jakarta, Indonesia)
 // @Param datetime formData string false "RFC3339 datetime" example(2026-12-01T09:00:00Z)
+// @Param category formData string false "Event category" Enums(convention, doujin_market, screening, cosplay_contest, game_tournament, meetup)
 // @Param image formData file false "Event image"
 // @Success 200 {object} response.Envelope{data=dto.EventResponse}
 // @Failure 400 {object} response.Envelope
@@ -212,6 +217,7 @@ func (h *EventHandler) UpdateEvent(c *gin.Context) {
 	input.Name = c.PostForm("name")
 	input.Description = c.PostForm("description")
 	input.Location = c.PostForm("location")
+	input.Category = model.Category(c.PostForm("category"))
 
 	event, err := h.service.Update(userID, uint(eventID), input)
 	if err != nil {

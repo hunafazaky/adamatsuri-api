@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hunafazaky/event-booking-app/internal/model"
 	"github.com/hunafazaky/event-booking-app/internal/response"
 )
 
@@ -32,12 +33,55 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			if sub, ok := claims["sub"].(float64); ok {
 				c.Set("user_id", uint(sub))
+
+				// role defaults to attendee if the claim is missing —
+				// e.g. a token signed before role support existed.
+				// Such a user simply can't hit organizer-only routes
+				// until they sign in again for a fresh token.
+				role := model.RoleAttendee
+				if r, ok := claims["role"].(string); ok && r != "" {
+					role = model.Role(r)
+				}
+				c.Set("role", role)
+
 				c.Next()
 				return
 			}
 		}
 
 		response.Fail(c, http.StatusUnauthorized, "invalid or missing token")
+		c.Abort()
+	}
+}
+
+// RequireRole guards a route to only the listed roles. It must be
+// mounted AFTER RequireAuth, which is what puts "role" into the
+// context in the first place — using it standalone always denies,
+// since there'd be no role to check.
+func RequireRole(allowed ...model.Role) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		v, exists := c.Get("role")
+		if !exists {
+			response.Fail(c, http.StatusForbidden, "you're not authorized")
+			c.Abort()
+			return
+		}
+
+		role, ok := v.(model.Role)
+		if !ok {
+			response.Fail(c, http.StatusForbidden, "you're not authorized")
+			c.Abort()
+			return
+		}
+
+		for _, a := range allowed {
+			if role == a {
+				c.Next()
+				return
+			}
+		}
+
+		response.Fail(c, http.StatusForbidden, "you're not authorized")
 		c.Abort()
 	}
 }

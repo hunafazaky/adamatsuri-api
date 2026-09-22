@@ -8,6 +8,7 @@ import (
 	"github.com/hunafazaky/event-booking-app/internal/config"
 	"github.com/hunafazaky/event-booking-app/internal/handler"
 	"github.com/hunafazaky/event-booking-app/internal/middleware"
+	"github.com/hunafazaky/event-booking-app/internal/model"
 	"github.com/hunafazaky/event-booking-app/internal/response"
 
 	"github.com/hunafazaky/event-booking-app/docs"
@@ -154,13 +155,24 @@ func Setup(
 		protectedApi := server.Group("/api")
 		protectedApi.Use(middleware.RequireAuth(cfg.JWTSecret))
 		protectedApi.GET("/auth/me", userHandler.GetMe)
-		protectedApi.POST("/events", eventHandler.CreateEvent)
-		protectedApi.PUT("/events/:id", eventHandler.UpdateEvent)
-		protectedApi.DELETE("/events/:id", eventHandler.DeleteEvent)
-		protectedApi.GET("/events/mine", eventHandler.GetEventsMine)
 		protectedApi.POST("/bookings", bookingHandler.CreateBooking)
 		protectedApi.GET("/bookings", bookingHandler.GetBooks)
 		protectedApi.DELETE("/bookings/:id", bookingHandler.DeleteBooking)
+	}
+
+	{
+		// Event management (create/update/delete/list-mine) is
+		// organizer-and-admin only. Ownership (a user can only touch
+		// THEIR OWN event) is still checked separately inside
+		// EventService — this middleware only gates "can create/manage
+		// events at all", not "can manage this specific event".
+		organizerApi := server.Group("/api")
+		organizerApi.Use(middleware.RequireAuth(cfg.JWTSecret))
+		organizerApi.Use(middleware.RequireRole(model.RoleOrganizer, model.RoleAdmin))
+		organizerApi.POST("/events", eventHandler.CreateEvent)
+		organizerApi.PUT("/events/:id", eventHandler.UpdateEvent)
+		organizerApi.DELETE("/events/:id", eventHandler.DeleteEvent)
+		organizerApi.GET("/events/mine", eventHandler.GetEventsMine)
 	}
 
 	// --- API documentation ---
