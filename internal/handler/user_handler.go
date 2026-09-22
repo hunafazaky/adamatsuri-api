@@ -70,7 +70,48 @@ func (h *UserHandler) SignIn(c *gin.Context) {
 	response.Success(c, http.StatusOK, "user signed successfully", user)
 }
 
-// GetMe godoc
+// UpdateInterests godoc
+// @Summary Update favorite series
+// @Description Replaces the authenticated user's full list of favorite-series/interest tags. Unknown tag names are created on the fly, reusing the same tag pool events are tagged with.
+// @Security BearerAuth
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body UpdateInterestsInput true "New interest list (replaces the existing one; empty array clears it)"
+// @Success 200 {object} response.Envelope{data=dto.UserResponse}
+// @Failure 400 {object} response.Envelope
+// @Failure 401 {object} response.Envelope
+// @Router /auth/me/interests [put]
+func (h *UserHandler) UpdateInterests(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	var input UpdateInterestsInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		response.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := h.service.UpdateInterests(userID, input.Interests)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "interests updated successfully", user)
+}
+
+// UpdateInterestsInput is the request body for PUT /auth/me/interests.
+// Interests has no "required" binding on purpose — an empty array (or
+// an omitted field) is valid and means "clear all interests", not a
+// validation error.
+type UpdateInterestsInput struct {
+	Interests []string `json:"interests" example:"Jujutsu Kaisen,shounen"`
+}
+
 // @Summary Get user's data
 // @Description Returns the profile of the authenticated user.
 // @Security BearerAuth

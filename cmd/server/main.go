@@ -73,7 +73,7 @@ func main() {
 
 	// Services — note the extra dependencies beyond just their repo
 	uploader := service.NewImageKitUploader(cfg.ImageKitPrivateKey)
-	userService := service.NewUserService(userRepo, cfg.JWTSecret)
+	userService := service.NewUserService(userRepo, tagRepo, cfg.JWTSecret)
 	eventService := service.NewEventService(eventRepo, tagRepo, uploader)
 	bookingService := service.NewBookingService(bookingRepo, eventRepo)
 	tagService := service.NewTagService(tagRepo)

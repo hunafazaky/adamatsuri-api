@@ -32,15 +32,17 @@ type UserService interface {
 	SignUp(input SignUpInput) (*dto.UserResponse, error)
 	SignIn(input SignInInput) (*dto.SignInResponse, error)
 	GetAuthUser(userID uint) (*dto.UserResponse, error)
+	UpdateInterests(userID uint, names []string) (*dto.UserResponse, error)
 }
 
 type userService struct {
 	repo      repository.UserRepository
+	tagRepo   repository.TagRepository
 	jwtSecret string
 }
 
-func NewUserService(repo repository.UserRepository, jwtSecret string) UserService {
-	return &userService{repo: repo, jwtSecret: jwtSecret}
+func NewUserService(repo repository.UserRepository, tagRepo repository.TagRepository, jwtSecret string) UserService {
+	return &userService{repo: repo, tagRepo: tagRepo, jwtSecret: jwtSecret}
 }
 
 func (s *userService) SignUp(input SignUpInput) (*dto.UserResponse, error) {
@@ -116,5 +118,29 @@ func (s *userService) GetAuthUser(userID uint) (*dto.UserResponse, error) {
 
 	response := toUserResponse(*user)
 
+	return &response, nil
+}
+
+// UpdateInterests replaces the authenticated user's full set of
+// favorite-series/interest tags. Unlike Event's tags field, this is a
+// dedicated endpoint whose only job is setting interests, so there's no
+// "nil means unchanged" ambiguity to worry about — the given names ARE
+// the new interest list, and an empty list clears it.
+func (s *userService) UpdateInterests(userID uint, names []string) (*dto.UserResponse, error) {
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		return nil, mapLookupError(err, "user not found", "failed to load user")
+	}
+
+	tags, err := s.tagRepo.FindOrCreateByNames(names)
+	if err != nil {
+		return nil, apperror.Internal("failed to process interests", err)
+	}
+
+	if err := s.repo.SetInterests(user, tags); err != nil {
+		return nil, apperror.Internal("failed to update interests", err)
+	}
+
+	response := toUserResponse(*user)
 	return &response, nil
 }

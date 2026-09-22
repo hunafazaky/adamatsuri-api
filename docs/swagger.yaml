@@ -107,10 +107,24 @@ definitions:
         type: string
       id:
         type: integer
+      interests:
+        items:
+          $ref: '#/definitions/dto.TagResponse'
+        type: array
       name:
         type: string
       role:
         $ref: '#/definitions/model.Role'
+    type: object
+  handler.UpdateInterestsInput:
+    properties:
+      interests:
+        example:
+        - Jujutsu Kaisen
+        - shounen
+        items:
+          type: string
+        type: array
     type: object
   model.Category:
     enum:
@@ -257,6 +271,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Get user's data
+      tags:
+      - Auth
+  /auth/me/interests:
+    put:
+      consumes:
+      - application/json
+      description: Replaces the authenticated user's full list of favorite-series/interest
+        tags. Unknown tag names are created on the fly, reusing the same tag pool
+        events are tagged with.
+      parameters:
+      - description: New interest list (replaces the existing one; empty array clears
+          it)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateInterestsInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Update favorite series
       tags:
       - Auth
   /auth/signin:

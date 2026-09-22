@@ -58,6 +58,69 @@
                 }
             }
         },
+        "/auth/me/interests": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replaces the authenticated user's full list of favorite-series/interest tags. Unknown tag names are created on the fly, reusing the same tag pool events are tagged with.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Update favorite series",
+                "parameters": [
+                    {
+                        "description": "New interest list (replaces the existing one; empty array clears it)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateInterestsInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Envelope"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/signin": {
             "post": {
                 "description": "Authenticates a user and returns a JWT with the user's profile.",
@@ -1038,11 +1101,32 @@
                 "id": {
                     "type": "integer"
                 },
+                "interests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TagResponse"
+                    }
+                },
                 "name": {
                     "type": "string"
                 },
                 "role": {
                     "$ref": "#/definitions/model.Role"
+                }
+            }
+        },
+        "handler.UpdateInterestsInput": {
+            "type": "object",
+            "properties": {
+                "interests": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Jujutsu Kaisen",
+                        "shounen"
+                    ]
                 }
             }
         },

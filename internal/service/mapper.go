@@ -11,10 +11,11 @@ import (
 
 func toUserResponse(user model.User) dto.UserResponse {
 	return dto.UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
-		Role:  user.Role,
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Role:      user.Role,
+		Interests: toTagResponses(user.Interests),
 	}
 }
 

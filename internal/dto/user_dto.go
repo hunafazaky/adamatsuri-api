@@ -6,10 +6,11 @@ import "github.com/hunafazaky/event-booking-app/internal/model"
 // appears in the API — standalone or nested inside an event/booking.
 // Password and internal timestamps are intentionally excluded.
 type UserResponse struct {
-	ID    uint       `json:"id"`
-	Name  string     `json:"name"`
-	Email string     `json:"email"`
-	Role  model.Role `json:"role"`
+	ID        uint          `json:"id"`
+	Name      string        `json:"name"`
+	Email     string        `json:"email"`
+	Role      model.Role    `json:"role"`
+	Interests []TagResponse `json:"interests"`
 }
 
 // SignInResponse is returned by POST /signin — the JWT plus the
