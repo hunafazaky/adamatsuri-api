@@ -23,6 +23,11 @@ type Config struct {
 	JWTSecret          string
 	ImageKitPrivateKey string
 
+	// ClientOrigin is the frontend's origin(s), comma-separated, allowed
+	// to call this API from a browser (CORS). Defaults to the Vite dev
+	// server's default port so local dev works with zero setup.
+	ClientOrigin string
+
 	// PublicHost is the externally-reachable host:port for this deployment
 	// (e.g. "your-app.onrender.com"). Optional — empty locally, where the
 	// spec's default @host (localhost:8080) from the swag annotation
@@ -49,6 +54,8 @@ func Load() (*Config, error) {
 
 		JWTSecret:          os.Getenv("JWT_SECRET"),
 		ImageKitPrivateKey: os.Getenv("IMAGEKIT_PRIVATE_KEY"),
+
+		ClientOrigin: getEnv("CLIENT_ORIGIN", "http://localhost:5173"),
 
 		// PUBLIC_HOST is the explicit override. If not set, fall back to
 		// RENDER_EXTERNAL_HOSTNAME, which Render auto-populates for every

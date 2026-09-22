@@ -140,6 +140,8 @@ func Setup(
 	bookingHandler *handler.BookingHandler,
 	tagHandler *handler.TagHandler,
 ) {
+	server.Use(middleware.CORS(cfg.ClientOrigin))
+
 	{
 		api := server.Group("/api/events")
 		api.GET("", eventHandler.GetEvents)
