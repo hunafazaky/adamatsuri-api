@@ -670,7 +670,7 @@ const docTemplate = `{
         },
         "/events/{id}": {
             "get": {
-                "description": "Returns an event by ID, including its bookings.",
+                "description": "Returns an event by ID. attendee_count is always visible; the full bookings list (with phone numbers) is only included when the caller is this event's organizer or an admin — send a Bearer token to be recognized as one.",
                 "produces": [
                     "application/json"
                 ],
@@ -980,6 +980,9 @@ const docTemplate = `{
         "dto.EventDetailResponse": {
             "type": "object",
             "properties": {
+                "attendee_count": {
+                    "type": "integer"
+                },
                 "bookings": {
                     "type": "array",
                     "items": {

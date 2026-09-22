@@ -133,7 +133,7 @@ func (h *EventHandler) GetEvents(c *gin.Context) {
 
 // GetEventByID godoc
 // @Summary Get an event
-// @Description Returns an event by ID, including its bookings.
+// @Description Returns an event by ID. attendee_count is always visible; the full bookings list (with phone numbers) is only included when the caller is this event's organizer or an admin — send a Bearer token to be recognized as one.
 // @Tags Events
 // @Produce json
 // @Param id path int true "Event ID" example(1)
@@ -147,7 +147,9 @@ func (h *EventHandler) GetEventByID(c *gin.Context) {
 		return
 	}
 
-	event, err := h.service.GetByID(uint(eventID))
+	viewerID, viewerRole := getOptionalViewer(c)
+
+	event, err := h.service.GetByID(uint(eventID), viewerID, viewerRole)
 	if err != nil {
 		response.FromError(c, err)
 		return

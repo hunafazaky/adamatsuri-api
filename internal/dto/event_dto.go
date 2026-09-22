@@ -22,12 +22,21 @@ type EventResponse struct {
 	CreatedAt   time.Time      `json:"created_at"`
 }
 
-// EventDetailResponse extends EventResponse with the list of bookings.
-// Used only for GET /events/:id, the one query that actually preloads
+// EventDetailResponse extends EventResponse with attendee info. Used
+// only for GET /events/:id, the one query that actually preloads
 // Booking + Booking.User.
+//
+// AttendeeCount is always accurate and visible to anyone. Bookings —
+// the actual list, with each attendee's phone number and booking
+// code — is only populated for the event's organizer (or an admin);
+// EventService.GetByID leaves it nil/empty for every other viewer,
+// including an anonymous one. Getting this backwards would leak every
+// attendee's phone number to the public on a route that requires no
+// authentication at all.
 type EventDetailResponse struct {
 	EventResponse
-	Bookings []BookingSummaryResponse `json:"bookings"`
+	AttendeeCount int                      `json:"attendee_count"`
+	Bookings      []BookingSummaryResponse `json:"bookings"`
 }
 
 // EventListMeta carries pagination info alongside a list of events.

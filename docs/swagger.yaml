@@ -24,6 +24,8 @@ definitions:
     type: object
   dto.EventDetailResponse:
     properties:
+      attendee_count:
+        type: integer
       bookings:
         items:
           $ref: '#/definitions/dto.BookingSummaryResponse'
@@ -661,7 +663,9 @@ paths:
       tags:
       - Events
     get:
-      description: Returns an event by ID, including its bookings.
+      description: Returns an event by ID. attendee_count is always visible; the full
+        bookings list (with phone numbers) is only included when the caller is this
+        event's organizer or an admin — send a Bearer token to be recognized as one.
       parameters:
       - description: Event ID
         example: 1

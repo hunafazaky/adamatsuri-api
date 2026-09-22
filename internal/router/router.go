@@ -145,7 +145,7 @@ func Setup(
 	{
 		api := server.Group("/api/events")
 		api.GET("", eventHandler.GetEvents)
-		api.GET("/:id", eventHandler.GetEventByID)
+		api.GET("/:id", middleware.OptionalAuth(cfg.JWTSecret), eventHandler.GetEventByID)
 	}
 
 	{

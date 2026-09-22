@@ -42,7 +42,10 @@ type UpdateEventInput struct {
 type EventService interface {
 	Create(userID uint, input CreateEventInput) (*dto.EventResponse, error)
 	List(search string, category model.Category, tag string, page, limit int) ([]dto.EventResponse, dto.EventListMeta, error)
-	GetByID(id uint) (*dto.EventDetailResponse, error)
+	// viewerID/viewerRole identify who's asking — 0/"" for an
+	// anonymous viewer. They decide whether the full Bookings list
+	// (with phone numbers) is included; see EventDetailResponse.
+	GetByID(id uint, viewerID uint, viewerRole model.Role) (*dto.EventDetailResponse, error)
 	GetByUser(userID uint) ([]dto.EventResponse, error)
 	Update(userID, eventID uint, input UpdateEventInput) (*dto.EventResponse, error)
 	Delete(userID, eventID uint) error
@@ -148,7 +151,7 @@ func (s *eventService) List(search string, category model.Category, tag string, 
 	return eventResponse, eventListMeta, nil
 }
 
-func (s *eventService) GetByID(id uint) (*dto.EventDetailResponse, error) {
+func (s *eventService) GetByID(id uint, viewerID uint, viewerRole model.Role) (*dto.EventDetailResponse, error) {
 	event, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, mapLookupError(err, "event not found", "failed to load event")
@@ -156,18 +159,29 @@ func (s *eventService) GetByID(id uint) (*dto.EventDetailResponse, error) {
 
 	eventResponse := toEventResponse(*event)
 
-	bookingSummaryResponse := make([]dto.BookingSummaryResponse, 0, len(event.Booking))
-	for _, item := range event.Booking {
-		bookingSummaryResponse = append(bookingSummaryResponse, dto.BookingSummaryResponse{
-			ID:          item.ID,
-			BookingCode: item.BookingCode,
-			Phone:       item.Phone,
-			User:        toUserResponse(item.User),
-		})
+	// Only the event's own organizer (or an admin) sees WHO booked and
+	// their phone/booking code. Everyone else — including an
+	// anonymous, unauthenticated viewer, since this route requires no
+	// auth at all — gets just the count. viewerID == 0 means
+	// anonymous; it can never equal a real event.UserID (IDs start at 1).
+	isPrivilegedViewer := viewerRole == model.RoleAdmin || (viewerID != 0 && event.UserID == viewerID)
+
+	var bookingSummaryResponse []dto.BookingSummaryResponse
+	if isPrivilegedViewer {
+		bookingSummaryResponse = make([]dto.BookingSummaryResponse, 0, len(event.Booking))
+		for _, item := range event.Booking {
+			bookingSummaryResponse = append(bookingSummaryResponse, dto.BookingSummaryResponse{
+				ID:          item.ID,
+				BookingCode: item.BookingCode,
+				Phone:       item.Phone,
+				User:        toUserResponse(item.User),
+			})
+		}
 	}
 
 	eventDetailResponse := dto.EventDetailResponse{
 		EventResponse: eventResponse,
+		AttendeeCount: len(event.Booking),
 		Bookings:      bookingSummaryResponse,
 	}
 	return &eventDetailResponse, nil

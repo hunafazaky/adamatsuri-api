@@ -54,6 +54,48 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 	}
 }
 
+// OptionalAuth is for routes that are public but behave DIFFERENTLY
+// for a signed-in viewer — e.g. GET /events/:id, which shows full
+// attendee info to the event's organizer but not to anyone else. If
+// there's no token, or it's invalid/expired, this simply doesn't set
+// "user_id"/"role" and moves on — unlike RequireAuth, it never aborts
+// the request. Handlers on this route should check for "user_id"
+// with the two-value c.Get form (or a dedicated helper), never the
+// version that errors when it's absent.
+func OptionalAuth(jwtSecret string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			c.Next()
+			return
+		}
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
+		})
+		if err != nil || !token.Valid {
+			c.Next()
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if sub, ok := claims["sub"].(float64); ok {
+				c.Set("user_id", uint(sub))
+
+				role := model.RoleAttendee
+				if r, ok := claims["role"].(string); ok && r != "" {
+					role = model.Role(r)
+				}
+				c.Set("role", role)
+			}
+		}
+
+		c.Next()
+	}
+}
+
 // RequireRole guards a route to only the listed roles. It must be
 // mounted AFTER RequireAuth, which is what puts "role" into the
 // context in the first place — using it standalone always denies,
