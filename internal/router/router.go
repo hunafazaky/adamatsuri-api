@@ -163,6 +163,8 @@ func Setup(
 		protectedApi := server.Group("/api")
 		protectedApi.Use(middleware.RequireAuth(cfg.JWTSecret))
 		protectedApi.GET("/auth/me", userHandler.GetMe)
+		protectedApi.PATCH("/auth/me", userHandler.UpdateProfile)
+		protectedApi.DELETE("/auth/me", userHandler.DeleteAccount)
 		protectedApi.PUT("/auth/me/interests", userHandler.UpdateInterests)
 		protectedApi.POST("/bookings", bookingHandler.CreateBooking)
 		protectedApi.GET("/bookings", bookingHandler.GetBooks)

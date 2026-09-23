@@ -112,6 +112,69 @@ type UpdateInterestsInput struct {
 	Interests []string `json:"interests" example:"Jujutsu Kaisen,shounen"`
 }
 
+// UpdateProfile godoc
+// @Summary Update profile
+// @Description Updates the authenticated user's name. Email isn't editable through this endpoint.
+// @Security BearerAuth
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body UpdateProfileInput true "New name"
+// @Success 200 {object} response.Envelope{data=dto.UserResponse}
+// @Failure 400 {object} response.Envelope
+// @Failure 401 {object} response.Envelope
+// @Router /auth/me [patch]
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	var input UpdateProfileInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		response.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := h.service.UpdateProfile(userID, input.Name)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "profile updated successfully", user)
+}
+
+// UpdateProfileInput is the request body for PATCH /auth/me.
+type UpdateProfileInput struct {
+	Name string `json:"name" binding:"required" example:"Jane Doe"`
+}
+
+// DeleteAccount godoc
+// @Summary Delete account
+// @Description Permanently deletes the authenticated user's account. Their created events and bookings are NOT cascade-deleted — they remain, now pointing at a removed user.
+// @Security BearerAuth
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} response.Envelope
+// @Failure 401 {object} response.Envelope
+// @Router /auth/me [delete]
+func (h *UserHandler) DeleteAccount(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	if err := h.service.DeleteAccount(userID); err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "account deleted successfully", nil)
+}
+
 // @Summary Get user's data
 // @Description Returns the profile of the authenticated user.
 // @Security BearerAuth

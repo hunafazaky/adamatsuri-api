@@ -14,6 +14,16 @@ type UserRepository interface {
 	// all interests). Like EventRepository.SetTags, it only touches
 	// the join table — callers must pass already-persisted Tag rows.
 	SetInterests(user *model.User, tags []model.Tag) error
+	// UpdateName updates only the name column, by ID — deliberately
+	// NOT a full Save(user) on a struct fetched via FindByID, whose
+	// Select() only loads id/name/email/role. Saving that struct back
+	// would write empty strings over Password and every other column
+	// FindByID didn't select. Update() with an explicit column list
+	// has no such risk.
+	UpdateName(userID uint, name string) error
+	// Delete soft-deletes the user by ID (GORM sets DeletedAt on any
+	// model.User — no need to fetch the row first).
+	Delete(userID uint) error
 }
 
 type userRepository struct {
@@ -44,4 +54,12 @@ func (r *userRepository) SetInterests(user *model.User, tags []model.Tag) error 
 	}
 	user.Interests = tags
 	return nil
+}
+
+func (r *userRepository) UpdateName(userID uint, name string) error {
+	return r.db.Model(&model.User{}).Where("id = ?", userID).Update("name", name).Error
+}
+
+func (r *userRepository) Delete(userID uint) error {
+	return r.db.Delete(&model.User{}, userID).Error
 }

@@ -33,6 +33,8 @@ type UserService interface {
 	SignIn(input SignInInput) (*dto.SignInResponse, error)
 	GetAuthUser(userID uint) (*dto.UserResponse, error)
 	UpdateInterests(userID uint, names []string) (*dto.UserResponse, error)
+	UpdateProfile(userID uint, name string) (*dto.UserResponse, error)
+	DeleteAccount(userID uint) error
 }
 
 type userService struct {
@@ -143,4 +145,44 @@ func (s *userService) UpdateInterests(userID uint, names []string) (*dto.UserRes
 
 	response := toUserResponse(*user)
 	return &response, nil
+}
+
+// UpdateProfile currently only lets a user change their name. Email
+// isn't editable here — changing it raises questions (re-verification,
+// uniqueness checks) this endpoint doesn't attempt to answer.
+func (s *userService) UpdateProfile(userID uint, name string) (*dto.UserResponse, error) {
+	if name == "" {
+		return nil, apperror.BadRequest("name is required")
+	}
+
+	// UpdateName touches only the name column (see the repository
+	// method's own comment for why) — so re-fetch afterward for a
+	// complete, accurate response rather than mutating a struct that
+	// FindByID only partially populated in the first place.
+	if err := s.repo.UpdateName(userID, name); err != nil {
+		return nil, apperror.Internal("failed to update profile", err)
+	}
+
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		return nil, mapLookupError(err, "user not found", "failed to load user")
+	}
+
+	response := toUserResponse(*user)
+	return &response, nil
+}
+
+// DeleteAccount soft-deletes the user row. It does NOT touch their
+// events or bookings — those rows stay exactly as they are, just
+// pointing at a now-soft-deleted user. That's a real, known
+// trade-off (an event's organizer info would show blank once loaded
+// through a query that excludes soft-deleted users), not an
+// oversight — cascading this properly (reassigning or hard-deleting
+// owned events, anonymizing bookings) is a bigger decision than
+// "delete my account" implies and deserves its own discussion first.
+func (s *userService) DeleteAccount(userID uint) error {
+	if err := s.repo.Delete(userID); err != nil {
+		return apperror.Internal("failed to delete account", err)
+	}
+	return nil
 }

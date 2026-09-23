@@ -179,10 +179,27 @@ func (s *eventService) GetByID(id uint, viewerID uint, viewerRole model.Role) (*
 		}
 	}
 
+	// Independent of isPrivilegedViewer: a viewer can always see
+	// their OWN booking, organizer or not. viewerID == 0 (anonymous)
+	// never matches, since no booking has UserID 0.
+	var yourBooking *dto.BookingSummaryResponse
+	for _, item := range event.Booking {
+		if viewerID != 0 && item.UserID == viewerID {
+			yourBooking = &dto.BookingSummaryResponse{
+				ID:          item.ID,
+				BookingCode: item.BookingCode,
+				Phone:       item.Phone,
+				User:        toUserResponse(item.User),
+			}
+			break
+		}
+	}
+
 	eventDetailResponse := dto.EventDetailResponse{
 		EventResponse: eventResponse,
 		AttendeeCount: len(event.Booking),
 		Bookings:      bookingSummaryResponse,
+		YourBooking:   yourBooking,
 	}
 	return &eventDetailResponse, nil
 }

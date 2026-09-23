@@ -33,10 +33,17 @@ type EventResponse struct {
 // including an anonymous one. Getting this backwards would leak every
 // attendee's phone number to the public on a route that requires no
 // authentication at all.
+//
+// YourBooking is different: it's the VIEWER'S OWN booking on this
+// event, if they have one — that's the viewer's own data regardless
+// of who they are, so it's populated for any authenticated viewer,
+// not just the organizer. This is what lets the frontend show
+// "you're booked" instead of a booking form after the fact.
 type EventDetailResponse struct {
 	EventResponse
 	AttendeeCount int                      `json:"attendee_count"`
 	Bookings      []BookingSummaryResponse `json:"bookings"`
+	YourBooking   *BookingSummaryResponse  `json:"your_booking"`
 }
 
 // EventListMeta carries pagination info alongside a list of events.
