@@ -244,7 +244,7 @@ info:
     `{ success, message, data, meta, error }`. On failure,
     `error` holds a human-readable message and `data`/`meta`
     are omitted.
-  title: Event Booking API
+  title: AdaMatsuri API
   version: "1.0"
 paths:
   /auth/me:

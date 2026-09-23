@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hunafazaky/event-booking-api/internal/apperror"
-	"github.com/hunafazaky/event-booking-api/internal/dto"
-	"github.com/hunafazaky/event-booking-api/internal/model"
-	"github.com/hunafazaky/event-booking-api/internal/repository"
+	"github.com/hunafazaky/adamatsuri-api/internal/apperror"
+	"github.com/hunafazaky/adamatsuri-api/internal/dto"
+	"github.com/hunafazaky/adamatsuri-api/internal/model"
+	"github.com/hunafazaky/adamatsuri-api/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )

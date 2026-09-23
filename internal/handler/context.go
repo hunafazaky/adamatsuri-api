@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-api/internal/apperror"
-	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/adamatsuri-api/internal/apperror"
+	"github.com/hunafazaky/adamatsuri-api/internal/model"
 )
 
 // getUserID reads the authenticated user's ID out of the Gin context.

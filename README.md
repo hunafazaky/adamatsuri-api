@@ -1,4 +1,4 @@
-# Event Booking API
+# AdaMatsuri API
 
 A REST API for browsing events and managing bookings, built with Go, Gin,
 and GORM.

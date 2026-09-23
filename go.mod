@@ -1,4 +1,4 @@
-module github.com/hunafazaky/event-booking-api
+module github.com/hunafazaky/adamatsuri-api
 
 go 1.27
 

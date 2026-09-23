@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/hunafazaky/event-booking-api/internal/model"
+import "github.com/hunafazaky/adamatsuri-api/internal/model"
 
 // UserResponse is the public shape of a user, returned anywhere a user
 // appears in the API — standalone or nested inside an event/booking.

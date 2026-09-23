@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: event-booking-api
+    name: adamatsuri-api
     runtime: docker
     dockerfilePath: ./Dockerfile.prod
     plan: free

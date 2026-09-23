@@ -3,7 +3,7 @@ package repository
 import (
 	"errors"
 
-	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/adamatsuri-api/internal/model"
 	"gorm.io/gorm"
 )
 

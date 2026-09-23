@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/hunafazaky/event-booking-api/internal/model"
+	"github.com/hunafazaky/adamatsuri-api/internal/model"
 	"gorm.io/gorm"
 )
 

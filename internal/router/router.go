@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-api/internal/config"
-	"github.com/hunafazaky/event-booking-api/internal/handler"
-	"github.com/hunafazaky/event-booking-api/internal/middleware"
-	"github.com/hunafazaky/event-booking-api/internal/model"
-	"github.com/hunafazaky/event-booking-api/internal/response"
+	"github.com/hunafazaky/adamatsuri-api/internal/config"
+	"github.com/hunafazaky/adamatsuri-api/internal/handler"
+	"github.com/hunafazaky/adamatsuri-api/internal/middleware"
+	"github.com/hunafazaky/adamatsuri-api/internal/model"
+	"github.com/hunafazaky/adamatsuri-api/internal/response"
 
-	"github.com/hunafazaky/event-booking-api/docs"
+	"github.com/hunafazaky/adamatsuri-api/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -113,7 +113,7 @@ const faviconSVG = `
 const scalarReferenceHTML = `<!doctype html>
 <html>
 <head>
-	<title>Event Booking API Reference</title>
+	<title>AdaMatsuri API Reference</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
@@ -206,7 +206,7 @@ func Setup(
 	// (or any uptime monitor) hitting the bare domain and wondering what
 	// they landed on.
 	server.GET("/", func(c *gin.Context) {
-		response.Success(c, http.StatusOK, "Event Booking API", gin.H{
+		response.Success(c, http.StatusOK, "AdaMatsuri API", gin.H{
 			"docs":    "/docs",
 			"swagger": "/swagger/index.html",
 		})

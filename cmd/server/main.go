@@ -4,21 +4,21 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunafazaky/event-booking-api/internal/config"
-	"github.com/hunafazaky/event-booking-api/internal/handler"
-	"github.com/hunafazaky/event-booking-api/internal/repository"
-	"github.com/hunafazaky/event-booking-api/internal/router"
-	"github.com/hunafazaky/event-booking-api/internal/service"
+	"github.com/hunafazaky/adamatsuri-api/internal/config"
+	"github.com/hunafazaky/adamatsuri-api/internal/handler"
+	"github.com/hunafazaky/adamatsuri-api/internal/repository"
+	"github.com/hunafazaky/adamatsuri-api/internal/router"
+	"github.com/hunafazaky/adamatsuri-api/internal/service"
 	"github.com/joho/godotenv"
 
 	// Named (not blank) import now — main.go reads docs.SwaggerInfo
 	// directly below to override Host once deployed. The generated
 	// docs.go's init() side-effect (registering the spec) still runs the
 	// same way on import either way.
-	"github.com/hunafazaky/event-booking-api/docs"
+	"github.com/hunafazaky/adamatsuri-api/docs"
 )
 
-// @title           Event Booking API
+// @title           AdaMatsuri API
 // @version         1.0
 // @description     API for browsing events and managing bookings.
 // @description

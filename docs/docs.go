@@ -1286,7 +1286,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/api",
 	Schemes:          []string{},
-	Title:            "Event Booking API",
+	Title:            "AdaMatsuri API",
 	Description:      "API for browsing events and managing bookings.\n\n**Authentication:** call `POST /auth/signin` (or\n`/auth/signup` first, if you don't have an account) to\nget a token. Then click \"Authorize\" (top right) and\nenter it as `Bearer <your-token>`. Endpoints marked\nwith a padlock require this.\n\n**Errors:** every response uses the same envelope —\n`{ success, message, data, meta, error }`. On failure,\n`error` holds a human-readable message and `data`/`meta`\nare omitted.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
