@@ -1,94 +1,173 @@
-# Anime Events API
+# AdaMatsuri API
 
-A REST API for browsing and booking anime-community events —
-conventions, doujin markets, screenings, cosplay contests, game
-tournaments, and meetups. Built with Go, Gin, and GORM.
+REST API for discovering and booking anime-community events such as conventions, doujin markets, screenings, cosplay contests, game tournaments, and meetups. The platform supports organizer-managed event creation, attendee bookings, role-based access, JWT authentication, and Swagger-generated API documentation.
 
-## Features
+---
 
-- **Auth** — JWT-based sign-up/sign-in, with a self-service role
-  choice (`attendee` or `organizer`) at sign-up
-- **Events** — categorized (convention, doujin market, screening,
-  cosplay contest, game tournament, meetup), with free-form
-  fandom/genre tags (e.g. "Jujutsu Kaisen", "shounen")
-- **Organizers** — create, update, and delete their own events;
-  `organizer`/`admin` role required, enforced at the route level
-- **Bookings** — attendees book an event with a phone number and get
-  a booking code back; can view and cancel their own bookings
-- **Profiles** — favorite-series/interest tags, reusing the same tag
-  pool events are tagged with
-- **Privacy-aware event detail** — an event's full attendee list
-  (phone numbers, booking codes) is only visible to that event's
-  organizer or an admin; everyone else sees just a count. A viewer
-  can always see their own booking on an event, regardless
+## Tech Stack
 
-## Stack
+- **Runtime / Language:** Go 1.27
+- **Framework:** Gin
+- **Database:** PostgreSQL
+- **Tooling & Infrastructure:** Docker, Docker Compose, GORM, Swagger, Render-ready production image
 
-- **Go** / **Gin** — HTTP layer
-- **GORM** / **PostgreSQL** — persistence
-- **JWT** — authentication
-- **ImageKit** — event image storage
-- **swaggo** — OpenAPI documentation
+---
 
-## Architecture
+## Prerequisites
 
-Layered: `handler → service → repository`, each depending on the layer
-below through an interface. See [`docs/API_RESPONSES.md`](docs/API_RESPONSES.md)
-for the full response contract.
+Ensure you have the following installed on your machine before getting started:
 
-```
-cmd/server        entrypoint — config, DB, dependency wiring
-internal/
-  handler          HTTP layer: bind request, call service, write response
-  service          business rules, validation, DTO mapping
-  repository       GORM queries, no business logic
-  model            database entities (User, Event, Booking, Tag, Role, Category)
-  dto              API request/response shapes
-  middleware       auth (required + optional), role guard, CORS
-  router           route registration
-  config           typed env config
-  apperror         typed errors → HTTP status mapping
-  response         standard JSON envelope
-docs               API reference + generated OpenAPI spec
-```
+- Go >= 1.27
+- Docker & Docker Compose
+- PostgreSQL (or use the Docker Compose service included in this project)
+- An ImageKit account if you plan to upload event images
 
-## Getting started
+---
 
-**Prerequisites:** Go 1.25+, Docker, an [ImageKit](https://imagekit.io)
-account (for event image uploads).
+## Getting Started
 
-1. Copy the env template and fill in your values:
-   ```bash
-   cp .env.example .env
-   ```
-   `CLIENT_ORIGIN` should match wherever the frontend runs
-   (`http://localhost:5173` by default) — CORS blocks everything else.
-2. Start the API and database:
-   ```bash
-   docker compose up
-   ```
-   The API is available at `http://localhost:8080` (or whatever `PORT`
-   you set).
+### 1. Clone the Repository
 
-## API documentation
-
-Interactive docs (Scalar UI, with request/response schemas and
-try-it-out): **`/docs`**
-
-For a quick-reference summary without running the server, see
-[`docs/API_RESPONSES.md`](docs/API_RESPONSES.md).
-
-## Known limitations
-
-- Deleting an account soft-deletes the user row only — their created
-  events and bookings aren't cascade-deleted or reassigned, so they'll
-  display with a blank organizer/attendee once loaded.
-- There's no way to change your role (`attendee`/`organizer`) after
-  signing up.
-
-## Development
-
-Regenerate the OpenAPI spec after changing any handler's `@swag` annotations:
 ```bash
-swag init -g cmd/server/main.go -o docs
+git clone <repository-url>
+cd adamatsuri-api
 ```
+
+### 2. Environment Setup
+
+Copy the example environment file and configure your local variables:
+
+```bash
+cp .env.example .env
+```
+
+At minimum, set the values used by the app at runtime. The project supports either a single `DB_URI` or the individual `POSTGRES_*` settings:
+
+```env
+PORT=8080
+DB_URI=postgres://admin:adminpassword@localhost:5432/mydb?sslmode=disable
+# or:
+# POSTGRES_HOST=localhost
+# POSTGRES_PORT=5432
+# POSTGRES_USER=admin
+# POSTGRES_PASSWORD=adminpassword
+# POSTGRES_DB_NAME=mydb
+# POSTGRES_SSLMODE=disable
+
+CLIENT_ORIGIN=http://localhost:5173
+JWT_SECRET=your_jwt_secret
+IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
+PUBLIC_HOST=
+```
+
+> `CLIENT_ORIGIN` should match the frontend origin that is allowed to call the API from the browser.
+
+### 3. Install Dependencies
+
+```bash
+go mod download
+```
+
+---
+
+## Running the Application
+
+### Development Mode
+
+Start the API directly with Go:
+
+```bash
+go run ./cmd/server
+```
+
+Or run the app and PostgreSQL together with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at:
+
+- http://localhost:8080
+- API docs: http://localhost:8080/docs
+
+### Production Mode
+
+Build the production container and run it with the same environment variables:
+
+```bash
+docker build -f Dockerfile.prod -t adamatsuri-api .
+docker run --rm -p 8080:8080 --env-file .env adamatsuri-api
+```
+
+The project is also configured for deployment on Render via [render.yaml](render.yaml).
+
+---
+
+## Available Scripts
+
+| Script | Description |
+| :--- | :--- |
+| `go run ./cmd/server` | Start the API locally in development mode. |
+| `docker compose up --build` | Start the PostgreSQL database and API using Docker Compose. |
+| `swag init -g cmd/server/main.go -o docs` | Regenerate the Swagger/OpenAPI specification from handler annotations. |
+| `docker build -f Dockerfile.prod -t adamatsuri-api .` | Build the production Docker image. |
+
+---
+
+## API Documentation
+
+The project exposes Swagger and Scalar-based documentation through the built-in routes:
+
+- API docs: http://localhost:8080/docs
+- Swagger UI: http://localhost:8080/swagger/index.html
+- OpenAPI JSON: http://localhost:8080/openapi.json
+
+Generated spec files are stored in the [docs](docs) directory and include the JSON/YAML exports for the API contract.
+
+---
+
+## Testing
+
+There is no automated test suite currently committed to this repository. When tests are added, the standard Go command is:
+
+```bash
+go test ./...
+```
+
+---
+
+## Project Structure
+
+```text
+.
+├── cmd/
+│   └── server/
+│       └── main.go
+├── docs/
+│   ├── docs.go
+│   ├── swagger.json
+│   └── swagger.yaml
+├── internal/
+│   ├── apperror/
+│   ├── config/
+│   ├── dto/
+│   ├── handler/
+│   ├── middleware/
+│   ├── model/
+│   ├── repository/
+│   ├── response/
+│   ├── router/
+│   └── service/
+├── .air.toml
+├── .env.example
+├── docker-compose.yaml
+├── Dockerfile
+├── Dockerfile.prod
+├── go.mod
+├── go.sum
+├── README.md
+├── readme-context.md
+├── render.yaml
+└── tmp/
+``` 
