@@ -990,6 +990,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/images/proxy": {
+            "get": {
+                "description": "Fetches an image from ImageKit server-side and streams it back — works around ISP-level interference with direct connections to ImageKit's CDN domain. Only ImageKit hosts are allowed as a source, to prevent this becoming an open proxy.",
+                "produces": [
+                    "image/*"
+                ],
+                "tags": [
+                    "Images"
+                ],
+                "summary": "Proxy an event image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "https://ik.imagekit.io/your_id/photo.jpg",
+                        "description": "The ImageKit image URL to proxy",
+                        "name": "src",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Envelope"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/response.Envelope"
+                        }
+                    }
+                }
+            }
+        },
         "/tags": {
             "get": {
                 "description": "Returns every fandom/genre tag currently in use, for building a filter UI or a tag picker.",

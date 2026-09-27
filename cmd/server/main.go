@@ -83,11 +83,12 @@ func main() {
 	eventHandler := handler.NewEventHandler(eventService)
 	bookingHandler := handler.NewBookingHandler(bookingService)
 	tagHandler := handler.NewTagHandler(tagService)
+	imageHandler := handler.NewImageProxyHandler(cfg.ImageKitURLEndpoint)
 
 	server := gin.Default()
 	server.SetTrustedProxies([]string{"localhost"})
 
-	router.Setup(server, cfg, userHandler, eventHandler, bookingHandler, tagHandler)
+	router.Setup(server, cfg, userHandler, eventHandler, bookingHandler, tagHandler, imageHandler)
 
 	server.Run(":" + cfg.Port)
 }

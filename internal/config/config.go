@@ -22,6 +22,12 @@ type Config struct {
 
 	JWTSecret          string
 	ImageKitPrivateKey string
+	// ImageKitURLEndpoint is the custom-domain endpoint ImageKit gives
+	// you (if configured) — e.g. "https://ik.imagekit.io/your_id" or a
+	// custom domain. Used only to widen the image proxy's allowlist
+	// (see handler/image_handler.go) beyond the default ik.imagekit.io
+	// host; optional, and harmless if left unset.
+	ImageKitURLEndpoint string
 
 	// ClientOrigin is the frontend's origin(s), comma-separated, allowed
 	// to call this API from a browser (CORS). Defaults to the Vite dev
@@ -52,8 +58,9 @@ func Load() (*Config, error) {
 		PostgresDB:   os.Getenv("POSTGRES_DB_NAME"),
 		PostgresSSL:  os.Getenv("POSTGRES_SSLMODE"),
 
-		JWTSecret:          os.Getenv("JWT_SECRET"),
-		ImageKitPrivateKey: os.Getenv("IMAGEKIT_PRIVATE_KEY"),
+		JWTSecret:           os.Getenv("JWT_SECRET"),
+		ImageKitPrivateKey:  os.Getenv("IMAGEKIT_PRIVATE_KEY"),
+		ImageKitURLEndpoint: os.Getenv("IMAGEKIT_URL_ENDPOINT"),
 
 		ClientOrigin: getEnv("CLIENT_ORIGIN", "http://localhost:5173"),
 

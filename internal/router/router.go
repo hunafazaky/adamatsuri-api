@@ -139,8 +139,14 @@ func Setup(
 	eventHandler *handler.EventHandler,
 	bookingHandler *handler.BookingHandler,
 	tagHandler *handler.TagHandler,
+	imageHandler *handler.ImageProxyHandler,
 ) {
 	server.Use(middleware.CORS(cfg.ClientOrigin))
+
+	{
+		api := server.Group("/api/images")
+		api.GET("/proxy", imageHandler.GetImage)
+	}
 
 	{
 		api := server.Group("/api/events")
