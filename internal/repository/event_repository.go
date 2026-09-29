@@ -72,6 +72,7 @@ func (r *eventRepository) FindAll(search string, category model.Category, tag st
 	err = query.
 		Preload("User", userSummary).
 		Preload("Tags").
+		Order("date_time DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&events).Error
@@ -95,6 +96,7 @@ func (r *eventRepository) FindByUserID(userID uint) ([]model.Event, error) {
 		Preload("User", userSummary).
 		Preload("Tags").
 		Where("user_id", userID).
+		Order("date_time DESC").
 		Find(&events).Error
 	return events, err
 }
